@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql/mysql-server:8.0.32
+    networks:
+      - back
+    volumes:
+      - database:/var/lib/mysql
+    env_file: ./.env.db
+
+  php:
+    build:
+      context: php
+      dockerfile: Dockerfile
+    networks:
+      - back
+    working_dir: /var/www/kursach
+    volumes:
+      - ./app/:/var/www/kursach
+    depends_on:
+      - mysql
+
+  adminer:
+    image: adminer:latest
+    networks:
+      - front
+      - back
+    ports:
+      - 8080:8080
+
+  apache:
+    build:
+      context: apache
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    networks:
+      - front
+      - back
+    working_dir: /var/www/kursach
+    volumes:
+      - ./app/:/var/www/kursach
+    depends_on:
+      - php
+
+
+volumes:
+  database:
+
+networks:
+  front:
+  back:
+    internal: true
