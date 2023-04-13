@@ -20,6 +20,7 @@ services:
       - ./app/:/var/www/kursach
     depends_on:
       - mysql
+    env_file: ./.env.db
 
   adminer:
     image: adminer:latest
