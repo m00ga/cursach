@@ -5,6 +5,9 @@ services:
     image: mysql/mysql-server:8.0.32
     networks:
       - back
+      - front
+    ports:
+      - 3306:3306
     volumes:
       - database:/var/lib/mysql
     env_file: ./.env.db
