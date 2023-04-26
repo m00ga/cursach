@@ -12,14 +12,3 @@ $router->add(
         ), []
     )
 );
-
-$router->add(
-    new Route(
-        "/show", array(
-            'controller' => "Main",
-            'action' => "show"
-        ), array(
-            "id" => "/[0-9]+/"
-        )
-    )
-);
