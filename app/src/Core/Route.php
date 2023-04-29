@@ -17,8 +17,7 @@ class Route
 
     function __construct(string $path, array $data, array $parseInfo)
     {
-        $this->path = explode('/', trim($path, "/"));
-        // $this->path = explode('/', $path);
+        $this->path = explode('/', $path);
         $this->data = $data;
         $this->wants = $parseInfo;
         $this->_args = [];
@@ -27,22 +26,22 @@ class Route
     function verify(string $uri)
     {
         $data = explode('/', $uri);
-        if(!isset($this->path[0]) || $this->path[0] != $data[0]) {
+        if(count($this->path) != count($data)) {
             return false;
         }
-        if(isset($this->path[1]) && $this->path[1] != $data[1]) {
-            return false;
-        }
-        if(isset($this->wants) && count($this->wants) != (count($data) - count($this->path))) {
-            return false;
-        }
-        $raw_args = array_slice($data, count($this->path));
         $keys = array_keys($this->wants);
-        for($i = 0; $i < count($raw_args); ++$i){
-            if(preg_match($this->wants[$keys[$i]], $raw_args[$i], $matches) === 0) {
-                return false;
+        for($i = 0; $i < count($this->path); $i++){
+            $path = trim($this->path[$i], "{}");
+            if(in_array($path, $keys)) {
+                if(preg_match($this->wants[$path], $data[$i], $matches) === 0) {
+                    return false;
+                }
+                $this->_args[$path] = $matches[0];
+            }else{
+                if($path != $data[$i]){
+                    return false;
+                }
             }
-            $this->_args[$keys[$i]] = $matches[0];
         }
         return true;
     }
@@ -99,7 +98,7 @@ class Router
 
     function start()
     {
-        $uri = trim($_SERVER["REQUEST_URI"], '/');
+        $uri = $_SERVER["REQUEST_URI"];
         foreach($this->_routes as &$route){
             if($route->verify($uri) === true) {
                 $route->run();
@@ -107,45 +106,8 @@ class Router
         }
     }
 
-    static function Error404(){
+    static function Error404()
+    {
 
     }
 }
-
-// class Route
-// {
-//     static function start()
-//     {
-//         $path = $_SERVER["REQUEST_URI"] ?? "/";
-//         $path = ltrim($path, "/");
-//         $data = explode("/", $path);
-//         var_dump($data);
-//
-//         $controller = $data[0] ?? "Main";
-//         $action = $data[1] ?? "index";
-//         $args = array_slice($data, 2);
-//
-//         $controllerName = "Controller_".$controller;
-//         $modelName = "Model_".$controller;
-//         $actionName = "action_".$action;
-//
-//         $modelPath = __DIR__."/Models/".strtolower($modelName);
-//         if (file_exists($modelPath)) {
-//             include $modelPath;
-//         }
-//
-//         $controllerPath = __DIR__."/Controllers/".strtolower($controllerName);
-//         if (file_exists($controllerPath)) {
-//             include $controllerPath;
-//         } else {
-//
-//         }
-//
-//         $controllerObj = new $controllerName;
-//         if (method_exists($controllerObj, $actionName)) {
-//             $controllerObj->$actionName($args);
-//         } else {
-//
-//         }
-//     }
-// }
