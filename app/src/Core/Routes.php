@@ -6,9 +6,11 @@ $router = new Router();
 
 $router->add(
     new Route(
-        "/", array(
+        "/{type}", array(
         'controller' => "Main",
         'action' => "index"
-        ), []
+        ), [
+            "type" => "/^(boys|girls)?/"
+        ]
     )
 );

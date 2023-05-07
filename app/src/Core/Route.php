@@ -38,7 +38,7 @@ class Route
                 }
                 $this->_args[$path] = $matches[0];
             }else{
-                if($path != $data[$i]){
+                if($path != $data[$i]) {
                     return false;
                 }
             }
@@ -63,12 +63,6 @@ class Route
             throw new RouteException("Action isn't setted");
         }
         $controllerName = "Controller_".$this->data['controller'];
-        $modelName = "Model_".$this->data['controller'];
-
-        $modelPath = ROOT_DIR."/Models/".strtolower($modelName).".php";
-        if(file_exists($modelPath)) {
-            include $modelPath;
-        }
 
         $controllerPath = ROOT_DIR."/Controllers/".strtolower($controllerName).".php";
         if(file_exists($controllerPath)) {
@@ -79,6 +73,12 @@ class Route
 
         $controllerObj = new $controllerName;
         if(method_exists($controllerObj, $this->data['action'])) {
+            if(count($controllerObj->models) > 0) {
+                $modelsPath = ROOT_DIR."/Models/";
+                foreach($controllerObj->models as $model){
+                    include $modelsPath.strtolower($model).".php";
+                }
+            }
             $action = $this->data['action'];
             $controllerObj->$action($this->_args);
         }else{

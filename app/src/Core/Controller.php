@@ -2,10 +2,11 @@
 
 class Controller
 {
-    protected Model $model;
+    public array $models;
     protected View $view;
 
     function __construct(){
+        $this->models = array();
         $this->view = new View();
     }
 }
