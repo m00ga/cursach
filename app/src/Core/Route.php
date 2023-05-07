@@ -13,13 +13,15 @@ class Route
     public array $path;
     public array $data;
     public array $wants;
+    public string $method;
     private array $_args;
 
-    function __construct(string $path, array $data, array $parseInfo)
+    function __construct(string $path, array $data, array $parseInfo, string $method = "GET")
     {
         $this->path = explode('/', $path);
         $this->data = $data;
         $this->wants = $parseInfo;
+        $this->method = $method;
         $this->_args = [];
     }
 
@@ -27,6 +29,9 @@ class Route
     {
         $data = explode('/', $uri);
         if(count($this->path) != count($data)) {
+            return false;
+        }
+        if($_SERVER["REQUEST_METHOD"] !== $this->method){
             return false;
         }
         $keys = array_keys($this->wants);
@@ -99,7 +104,7 @@ class Router
     function start()
     {
         $uri = $_SERVER["REQUEST_URI"];
-        foreach($this->_routes as &$route){
+        foreach($this->_routes as $route){
             if($route->verify($uri) === true) {
                 $route->run();
             }

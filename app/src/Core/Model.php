@@ -39,17 +39,17 @@ class Model
         }
     }
 
-    public function getAll()
+    public function getAll($mode = PDO::FETCH_BOTH)
     {
         $query = $this->conn->query("SELECT * FROM ".$this->table);
-        return $query->fetchAll(PDO::FETCH_BOTH);
+        return $query->fetchAll($mode);
     }
 
     function create(array $data)
     {
         $res = $this->verify($data, $inter);
         if($res !== true) {
-            return;
+            return false;
         }
         $values = "";
         $binds = "";
@@ -66,6 +66,7 @@ class Model
             $query->bindParam($k, $data[$k]);
         }
         $query->execute();
+        return true;
     }
 
     function read(int $id)
@@ -75,7 +76,9 @@ class Model
         $res = $query->fetch(PDO::FETCH_ASSOC);
         if($res !== false) {
             $this->data = $res;
+            return $res;
         }
+        return false;
     }
 
     function update(int $id, array $data)
@@ -93,11 +96,21 @@ class Model
             $query->bindParam($k, $data[$k]);
         }
         $query->execute();
+        if($query->rowCount() > 0) {
+            return true;
+        }else{
+            return false;
+        }
     }
 
     function delete(int $id)
     {
         $query = $this->conn->prepare("DELETE FROM ".$this->table." WHERE id = :id");
         $query->execute(array('id' => $id));
+        if($query->rowCount() > 0) {
+            return true;
+        }else{
+            return false;
+        }
     }
 }
