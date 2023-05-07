@@ -31,7 +31,7 @@ class Route
         if(count($this->path) != count($data)) {
             return false;
         }
-        if($_SERVER["REQUEST_METHOD"] !== $this->method){
+        if($_SERVER["REQUEST_METHOD"] !== $this->method) {
             return false;
         }
         $keys = array_keys($this->wants);
@@ -94,17 +94,51 @@ class Route
 
 class Router
 {
-    private array $_routes;
+    private array $_nroutes;
+
+    function __construct()
+    {
+        $this->_nroutes = array();
+    }
 
     function add(Route $route)
     {
-        $this->_routes[] = $route;
+        $data = array_slice($route->path, 1, count($route->path) - 2);
+        $point = &$this->_nroutes;
+        foreach($data as $sub){
+            if(!isset($point[$sub])) {
+                $point[$sub] = array();
+            }
+            $point = &$point[$sub];
+        }
+        if(count($data) === 0) {
+            $point['noone'][] = $route;
+        }else{
+            array_push($point, $route);
+        }
     }
 
     function start()
     {
         $uri = $_SERVER["REQUEST_URI"];
-        foreach($this->_routes as $route){
+        $data = explode("/", $uri);
+        $data = array_slice($data, 1, count($data) - 2);
+        $point = &$this->_nroutes;
+        if(count($data) !== 0 && count($data) < 2){
+            Router::Error404();
+            return;
+        }
+        foreach($data as $sub){
+            if(!isset($point[$sub])) {
+                Router::Error404();
+                return;
+            }
+            $point = &$point[$sub];
+        }
+        if(count($data) === 0){
+            $point = &$point['noone'];
+        }
+        foreach($point as $route){
             if($route->verify($uri) === true) {
                 $route->run();
             }
@@ -113,6 +147,6 @@ class Router
 
     static function Error404()
     {
-
+        echo "aga";
     }
 }

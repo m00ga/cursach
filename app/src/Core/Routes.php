@@ -9,7 +9,7 @@ function makeREST(Router $router, string $name)
     foreach($methods as $method){
         $router->add(
             new Route(
-                "/api/".$name."/".($method != "POST"? "{id}":""), array(
+                "/api/".$name."/{id}", array(
                     'controller' => "API",
                     'action' => $name
                 ), [
