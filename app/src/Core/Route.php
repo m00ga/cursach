@@ -27,7 +27,8 @@ class Route
 
     function verify(string $uri)
     {
-        $data = explode('/', $uri);
+        $get = explode("?", $uri);
+        $data = explode('/', $get[0]);
         if(count($this->path) != count($data)) {
             return false;
         }

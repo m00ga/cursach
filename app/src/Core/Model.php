@@ -45,6 +45,37 @@ class Model
         return $query->fetchAll($mode);
     }
 
+    function filterBy(array $params)
+    {
+        $this->verify($params, $inter);
+        $cond = "";
+        foreach($inter as $k){
+            if(is_array($params[$k])) {
+                $cond .= "( ";
+                foreach($params[$k] as $ind => $subk){
+                    $cond .= $k." = ".":".$k.$ind." OR "; 
+                }
+                $cond = substr($cond, 0, -3);
+                $cond .= ") AND ";
+            }else{
+                $cond .= $k." = ".":".$k." AND ";
+            }
+        }
+        $cond = substr($cond, 0, -4);
+        $query = $this->conn->prepare("SELECT * FROM ".$this->table." WHERE ".$cond);
+        foreach($inter as $k){
+            if(is_array($params[$k])) {
+                foreach($params[$k] as $ind => $subk){
+                    $query->bindValue($k.$ind, $subk);
+                }
+            }else{
+                $query->bindValue($k, $params[$k]);
+            }
+        }
+        $query->execute();
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     function create(array $data)
     {
         $res = $this->verify($data, $inter);
