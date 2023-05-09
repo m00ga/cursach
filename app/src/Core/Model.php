@@ -1,5 +1,10 @@
 <?php
 
+function isInteger($val)
+{
+    return ctype_digit(strval($val));
+}
+
 class Model
 {
     protected PDO $conn;
@@ -7,25 +12,65 @@ class Model
     protected string $table;
     protected array $data;
 
-    function __construct()
+    function __construct(bool $makeConn = true)
     {
-        $this->conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
+        if($makeConn) {
+            $this->conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
+        }
         $this->schema = array();
         $this->data = array();
         $this->table = '';
     }
 
-    protected function verify(array $data, array &$intr = null): bool|int
+    private function _validate($val, $typ)
+    {
+        if($typ == "int" || $typ == "float") {
+            $res = is_numeric($val);
+        }else if ($typ == "str") {
+            $res = is_string($val);
+        }else{
+            $res = ("is_".$typ)($val);
+        }
+        if($res === false) {
+            return false;
+        }
+        return ($typ."val")($val);
+    }
+
+    // Second most complex thing in Model
+    // For validating $data by schema
+    protected function verify(array $data, array &$intr = null): bool
     {
         $keys = array_keys($data);
-        $inter = array_intersect($this->schema, $keys);
-        $cnt = count($inter);
+        $sch_keys = array_keys($this->schema);
+        $inter = array_intersect($sch_keys, $keys);
+        $ret = [];
+        foreach($inter as $k){
+            $typ = $this->schema[$k];
+            if(is_array($data[$k])) {
+                foreach($data[$k] as $subk=>$subv){
+                    $res = $this->_validate($subv, $typ);
+                    if($res === false) {
+                        return false;
+                    }else{
+                        $ret[$k][$subk] = $res;
+                    }
+                }
+            }else{
+                $res = $this->_validate($data[$k], $typ);
+                if($res === false) {
+                    return false;
+                }else{
+                    $ret[$k] = $res;
+                }
+            }
+        }
 
-        $intr = $inter;
-
-        if ($cnt === count($this->schema)) {
+        $intr = $ret;
+        $cnt = count(array_keys($ret));
+        if($cnt === count($sch_keys)) {
             return true;
-        } else {
+        }else{
             return $cnt;
         }
     }
@@ -45,14 +90,41 @@ class Model
         return $query->fetchAll($mode);
     }
 
+    private function limit(array $params, string &$cond)
+    {
+        $keys = array_keys($params);
+        $ret = [];
+        if(in_array("limit", $keys)) {
+            $cond .= " LIMIT :limit";
+            $ret['limit'] = $params['limit'];
+        }
+        
+        if(in_array("offset", $keys)) {
+            if(!isset($ret['limit'])) {
+                $cond .= " LIMIT 10";
+            }
+            $cond .= " OFFSET :offset";
+            $ret['offset'] = $params['offset'];
+        }
+
+        return $ret;
+    }
+
+    // Most complex thing in Model
+    // filter by scheme + limit and offset
+    // works with array parameters in GET request
+    // validate by intersection with scheme
     function filterBy(array $params)
     {
-        $this->verify($params, $inter);
+        $res = $this->verify($params, $inter);
+        if($res !== true) {
+            return false;
+        }
         $cond = "";
-        foreach($inter as $k){
-            if(is_array($params[$k])) {
+        foreach($inter as $k=>$v){
+            if(is_array($v)) {
                 $cond .= "( ";
-                foreach($params[$k] as $ind => $subk){
+                foreach($v as $ind => $subk){
                     $cond .= $k." = ".":".$k.$ind." OR "; 
                 }
                 $cond = substr($cond, 0, -3);
@@ -62,14 +134,22 @@ class Model
             }
         }
         $cond = substr($cond, 0, -4);
-        $query = $this->conn->prepare("SELECT * FROM ".$this->table." WHERE ".$cond);
-        foreach($inter as $k){
-            if(is_array($params[$k])) {
-                foreach($params[$k] as $ind => $subk){
+        $sql = "SELECT * FROM ".$this->table;
+        if($cond !== "") {
+            $sql .= " WHERE ".$cond;
+        }
+        $limit = $this->limit($params, $sql);
+        $query = $this->conn->prepare($sql);
+        foreach($limit as $k=>$v){
+            $query->bindValue($k, abs(intval($v)), PDO::PARAM_INT);
+        }
+        foreach($inter as $k=>$v){
+            if(is_array($v)) {
+                foreach($v as $ind => $subk){
                     $query->bindValue($k.$ind, $subk);
                 }
             }else{
-                $query->bindValue($k, $params[$k]);
+                $query->bindValue($k, $v);
             }
         }
         $query->execute();
@@ -93,8 +173,8 @@ class Model
         $sql = 'INSERT INTO '.$this->table." (".$values.") VALUES (".$binds.")";
 
         $query = $this->conn->prepare($sql);
-        foreach($inter as $k){
-            $query->bindParam($k, $data[$k]);
+        foreach($inter as $k=>$v){
+            $query->bindParam($k, $v);
         }
         $query->execute();
         return true;
@@ -114,17 +194,20 @@ class Model
 
     function update(int $id, array $data)
     {
-        $this->verify($data, $inter);
+        $res = $this->verify($data, $inter);
+        if($res === false) {
+            return false;
+        }
         $values = "";
-        foreach($inter as $k){
+        foreach(array_keys($inter) as $k){
             $values .= $k." = ".":".$k.",";
         }
         $values = rtrim($values, ',');
         $sql = "UPDATE ".$this->table." SET ".$values." WHERE id = :id";
         $query = $this->conn->prepare($sql);
         $query->bindParam("id", $id);
-        foreach($inter as $k){
-            $query->bindParam($k, $data[$k]);
+        foreach($inter as $k=>$v){
+            $query->bindParam($k, $v);
         }
         $query->execute();
         if($query->rowCount() > 0) {

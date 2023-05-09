@@ -37,3 +37,4 @@ makeREST($router, 'product');
 makeREST($router, 'manufactors');
 makeREST($router, 'sizes');
 makeREST($router, 'types');
+makeREST($router, 'cart');
