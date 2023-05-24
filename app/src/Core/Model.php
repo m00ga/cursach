@@ -11,6 +11,8 @@ class Model
     protected array $schema;
     protected string $table;
     protected array $data;
+    protected array|null $constrains;
+    protected string|null $orderby;
 
     function __construct(bool $makeConn = true)
     {
@@ -18,7 +20,9 @@ class Model
             $this->conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
         }
         $this->schema = array();
+        $this->constrains = null;
         $this->data = array();
+        $this->orderby = null;
         $this->table = '';
     }
 
@@ -39,7 +43,7 @@ class Model
 
     // Second most complex thing in Model
     // For validating $data by schema
-    protected function verify(array $data, array &$intr = null): bool
+    protected function verify(array $data, array &$intr = null): bool|int
     {
         $keys = array_keys($data);
         $sch_keys = array_keys($this->schema);
@@ -84,10 +88,59 @@ class Model
         }
     }
 
+    private function _resolveConstraints()
+    {
+        $sql = "SELECT ";
+        $ret_sql = "";
+        $joins = "";
+        foreach(array_keys($this->schema) as $key){
+            if(in_array($key, array_keys($this->constrains))) {
+                $data = $this->constrains[$key];
+                $ret_sql .= $data['table'].".".$key.", ";
+                $joins .= "INNER JOIN ".$data['table']."\n";
+                $joins .= "ON ".$this->table.".".$key." = ".$data['table'].".".$data['cond']."\n";
+            }else{
+                $ret_sql .= $this->table.".".$key.", ";
+            }
+        }
+        $ret_sql = rtrim($ret_sql, ', ');
+        $sql .= $ret_sql." FROM ".$this->table."\n";
+        $sql .= $joins;
+        return $sql;
+    }
+
     public function getAll($mode = PDO::FETCH_BOTH)
     {
-        $query = $this->conn->query("SELECT * FROM ".$this->table);
+        $sql = '';
+        if($this->constrains === null) {
+            $sql = "SELECT * FROM ".$this->table;
+        }else{
+            $sql = $this->_resolveConstraints();
+        }
+        if($this->orderby !== null) {
+            $sql .= " ORDER BY ".$this->orderby;
+        }
+        $query = $this->conn->query($sql);
         return $query->fetchAll($mode);
+    }
+
+    public function count($cond = "id", $args = null)
+    {
+        $sql = "SELECT COUNT(".$cond.") FROM ".$this->table;
+        if($args !== null) {
+            $res = $this->verify($args, $inter);
+            if($res === false) {
+                return false;
+            }
+            $cond = $this->_buildCond($inter);
+            $sql .= " WHERE ".$cond;
+        }
+        $query = $this->conn->prepare($sql);
+        if($args !== null) {
+            $this->_prepareQuery($query, $inter);
+        }
+        $query->execute();
+        return $query->fetchColumn();
     }
 
     private function limit(array $params, string &$cond)
@@ -95,19 +148,63 @@ class Model
         $keys = array_keys($params);
         $ret = [];
         if(in_array("limit", $keys)) {
-            $cond .= " LIMIT :limit";
-            $ret['limit'] = $params['limit'];
+            if($this->_validate($params['limit'], 'int') !== false) {
+                $cond .= " LIMIT :limit";
+                $ret['limit'] = $params['limit'];
+            }
         }
         
         if(in_array("offset", $keys)) {
-            if(!isset($ret['limit'])) {
-                $cond .= " LIMIT 10";
+            if($this->_validate($params['offset'], 'int') !== false) {
+                if(!isset($ret['limit'])) {
+                    $cond .= " LIMIT 9";
+                }
+                $cond .= " OFFSET :offset";
+                $ret['offset'] = $params['offset'];
             }
-            $cond .= " OFFSET :offset";
-            $ret['offset'] = $params['offset'];
         }
 
         return $ret;
+    }
+
+    private function _buildCond($conds)
+    {
+        $cond = "";
+        foreach($conds as $key=>$val){
+            if(is_array($val)) {
+                $cond .= "( ";
+                foreach($val as $ind=>$subval){
+                    if(str_contains($subval, '%')) {
+                        $cond .= $this->table."."."$key"." LIKE ".":".$key.$ind." OR ";
+                    }else{
+                        $cond .= $this->table.".".$key." = ".":".$key.$ind." OR ";
+                    }
+                }
+                $cond = substr($cond, 0, -3);
+                $cond .= ") AND ";
+            }else{
+                if(str_contains($val, "%")) {
+                    $cond .= $this->table.".".$key." LIKE ".":".$key." AND ";
+                }else{
+                    $cond .= $this->table.".".$key." = ".":".$key." AND ";
+                }
+            }
+        }
+        $cond = substr($cond, 0, -4);
+        return $cond;
+    }
+
+    private function _prepareQuery(&$query, $args)
+    {
+        foreach($args as $k=>$v){
+            if(is_array($v)) {
+                foreach($v as $ind => $subk){
+                    $query->bindValue($k.$ind, $subk);
+                }
+            }else{
+                $query->bindValue($k, $v);
+            }
+        }
     }
 
     // Most complex thing in Model
@@ -117,41 +214,27 @@ class Model
     function filterBy(array $params)
     {
         $res = $this->verify($params, $inter);
-        if($res !== true) {
+        if($res === false) {
             return false;
         }
-        $cond = "";
-        foreach($inter as $k=>$v){
-            if(is_array($v)) {
-                $cond .= "( ";
-                foreach($v as $ind => $subk){
-                    $cond .= $k." = ".":".$k.$ind." OR "; 
-                }
-                $cond = substr($cond, 0, -3);
-                $cond .= ") AND ";
-            }else{
-                $cond .= $k." = ".":".$k." AND ";
-            }
+        $cond = $this->_buildCond($inter);
+        if($this->constrains === null) {
+            $sql = "SELECT * FROM ".$this->table;
+        }else{
+            $sql = $this->_resolveConstraints();
         }
-        $cond = substr($cond, 0, -4);
-        $sql = "SELECT * FROM ".$this->table;
         if($cond !== "") {
             $sql .= " WHERE ".$cond;
+        }
+        if($this->orderby !== null) {
+            $sql .= " ORDER BY ".$this->orderby;
         }
         $limit = $this->limit($params, $sql);
         $query = $this->conn->prepare($sql);
         foreach($limit as $k=>$v){
             $query->bindValue($k, abs(intval($v)), PDO::PARAM_INT);
         }
-        foreach($inter as $k=>$v){
-            if(is_array($v)) {
-                foreach($v as $ind => $subk){
-                    $query->bindValue($k.$ind, $subk);
-                }
-            }else{
-                $query->bindValue($k, $v);
-            }
-        }
+        $this->_prepareQuery($query, $inter);
         $query->execute();
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -182,7 +265,12 @@ class Model
 
     function read(int $id)
     {
-        $query = $this->conn->prepare("SELECT * FROM ".$this->table." WHERE id = :id");
+        if($this->constrains === null) {
+            $sql = "SELECT * FROM ".$this->table;
+        }else{
+            $sql = $this->_resolveConstraints();
+        }
+        $query = $this->conn->prepare($sql." WHERE ".$this->table.".id"." = :id");
         $query->execute(array('id' => $id));
         $res = $query->fetch(PDO::FETCH_ASSOC);
         if($res !== false) {

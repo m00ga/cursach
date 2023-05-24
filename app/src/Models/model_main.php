@@ -6,6 +6,7 @@ class Model_Main extends Model
     {
         parent::__construct();
         $this->schema = array(
+            "id" => "int",
             "name" => "str",
             "manufactor" => "int",
             "price" => "float",
@@ -14,6 +15,12 @@ class Model_Main extends Model
             "type" => "int",
             "size" => "int"
         );
-        $this->table = 'shop';
+        $this->constrains = [
+            "manufactor" => ["table" => "manufactors", "cond" => "id"],
+            "type" => ["table" => "types", "cond" => "id"],
+            "size" => ["table" => "sizes", "cond" => "id"]
+        ];
+        $this->orderby = 'id';
+        $this->table = "shop";
     }
 }

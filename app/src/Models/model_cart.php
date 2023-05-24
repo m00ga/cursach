@@ -14,7 +14,7 @@ class Model_Cart extends Model
 
     function getAll($mode = PDO::FETCH_BOTH)
     {
-        return (isset($_SESSION['cart']))? $_SESSION['cart']:false;
+        return (isset($_SESSION['cart']))? $_SESSION['cart']:[];
     }
 
     function filterBy(array $params)

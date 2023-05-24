@@ -6,8 +6,8 @@ class Model_Type extends Model
     {
         parent::__construct();
         $this->schema = array(
-            "id",
-            'type'
+            "id" => "int",
+            'type' => "str"
         );
         $this->table = "types";
     }

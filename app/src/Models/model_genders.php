@@ -6,8 +6,8 @@ class Model_Gender extends Model
     {
         parent::__construct();
         $this->schema = array(
-            "id",
-            "gender"
+            "id" => "int",
+            "gender" => "str"
         );
         $this->table = "genders";
     }

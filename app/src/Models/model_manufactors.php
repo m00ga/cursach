@@ -6,8 +6,8 @@ class Model_Manufactor extends Model
     {
         parent::__construct();
         $this->schema = array(
-            "id",
-            'manufactor'
+            "id" => "int",
+            'manufactor' => "str"
         );
         $this->table = "manufactors";
     }

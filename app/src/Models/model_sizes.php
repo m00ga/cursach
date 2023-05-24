@@ -6,8 +6,8 @@ class Model_Size extends Model
     {
         parent::__construct();
         $this->schema = array(
-            "id",
-            "size"
+            "id" => "int",
+            "size" => "str"
         );
         $this->table = "sizes";
     }
