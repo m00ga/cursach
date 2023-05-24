@@ -1,85 +1,69 @@
 <link rel="stylesheet" href="css/index.css">
+<script src="js/jquery-3.6.4.min.js"></script>
+<script src="js/pagination.js"></script>
+<script type="module" src="js/modal.js"></script>
+<script src="js/dynSearch.js"></script>
+<script src="js/login.js"></script>
 <div class="shop_menu">
-    <?php
-    $dom = new DOMDocument();
+    <div class='shop_params'>
+        <?php
+        $dom = new DOMDocument();
 
-    foreach($data as $k=>$v){
-        $menu = $dom->createElement("div");
-        $menu->setAttribute("class", $k."_menu");
-        $menu->appendChild($dom->createElement("span", $v[1]));
-        $list = $dom->createElement("ul");
-        foreach($v[0] as $val){
-            $li = $dom->createElement("li");
-            $check = $dom->createElement("input");
-            $check->setAttribute("type", "checkbox");
-            $check->setAttribute("name", $k."_".$val[0]);
-            $li->appendChild($check);
-            $li->appendChild($dom->createElement("span", $val[1]));
-            $list->appendChild($li);
+        foreach($data['menu'] as $k=>$v){
+            $menu = $dom->createElement("div");
+            $menu->appendChild($dom->createElement("span", $v[1]));
+            $list = $dom->createElement("ul");
+            foreach($v[0] as $val){
+                $li = $dom->createElement("li");
+                $check = $dom->createElement("input");
+                $check->setAttribute("type", "checkbox");
+                $check->setAttribute("value", $val[0]);
+                $check->setAttribute("class", $k);
+                $li->appendChild($check);
+                $li->appendChild($dom->createElement("span", $val[1]));
+                $list->appendChild($li);
+            }
+            $menu->appendChild($list);
+            $dom->appendChild($menu);
         }
-        $menu->appendChild($list);
-        $dom->appendChild($menu);
-    }
 
-    echo $dom->saveHTML();
-    ?>
+        echo $dom->saveHTML();
+        ?>
+    </div>
+    <button id='filter'>Фільтрувати</button>
 </div>
 <div class="shop_list">
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
-    <div class='shop_item' data-id='1'>
-        <img class='item_img' src="media/cart.svg"> 
-        <span class="item_name">Cart</span>
-        <span class="item_price">Price: 12.34$</span>
-        <button class="item_add">Add to cart</button>
-    </div>
 </div>
 <div class="pages">
-    123
+</div>
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <input id="prodSearch" class="search" type="text">
+        </div>
+        <div id='prodBody' class="modal-body">
+        </div>
+    </div>
+</div>
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body" id="loginPanel">
+            <div class="login-row" style="grid-area:login;">
+                <label for="loginparam">Login</label>
+                <input id="loginparam" type="text">
+            </div>
+            <div class="login-row" style="grid-area:pass;">
+                <label for="passwordparam">Password</label>
+                <input id="passwordparam" type="password">
+            </div>
+            <a href="#" id="passEye">Eye</a>
+        </div>
+        <div class="modal-footer">
+            <span id="loginError" style="display:none;"></span>
+            <button id="loginButton">Login</button>
+        </div>
+    </div>
 </div>
