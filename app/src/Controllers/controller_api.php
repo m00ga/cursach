@@ -18,6 +18,11 @@ class RESTify
 
     function get()
     {
+        $group = false;
+        if(isset($_GET['group'])) {
+            $group = boolval($_GET['group']);
+            unset($_GET['group']);
+        }
         if($this->id !== 0) {
             $res = $this->_model->read($this->id);
         }else if (count($_GET) > 0) {
@@ -27,7 +32,24 @@ class RESTify
         }
         header('Content-Type: application/json; charset=utf-8');
         if($res !== false) {
-            echo json_encode($res);
+            if(count($res) == 0) {
+                http_response_code(404);
+            }else{
+                $ret = array();
+                if($group == true) {
+                    foreach($res as $row){
+                        $ret[$row['name']][] = $row;
+                    }
+                }else{
+                    $ret = $res;
+                }
+                echo json_encode(
+                    [
+                    'items' => $ret,
+                    'count' => count($ret)
+                    ]
+                );
+            }
         }else{
             http_response_code(404);
         }
@@ -137,7 +159,8 @@ class Controller_API extends Controller
         $rest->process();
     }
 
-    function cart($params){
+    function cart($params)
+    {
         $model = new Model_Cart();
         $rest = new RESTify($model, ($params['id'] != "")? intval($params['id']):0);
         $rest->process();

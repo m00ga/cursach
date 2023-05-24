@@ -26,23 +26,24 @@ class Controller_Main extends Controller
                 $_SESSION['gender'] = $params['type'];
             }
         }
-        setcookie("gender", $_SESSION['gender']);
+        setcookie("gender", $_SESSION['gender'], ['samesite' => 'Strict']);
         $args = array();
         $man = new Model_Manufactor();
-        $args['man'] = array(
+        $args['menu']['manufactor'] = array(
         $man->getAll(),
         "Виробники"
         );
         $typ = new Model_Type();
-        $args['typ'] = array(
+        $args['menu']['type'] = array(
         $typ->getAll(),
         "Типи"
         );
         $size = new Model_Size();
-        $args["size"] = array(
+        $args['menu']["size"] = array(
         $size->getAll(),
         "Розмір"
         );
+        $args['productCount'] = (new Model_Main())->count();
         $this->view->generate("index_view", "basic_view.php", $args);
     }
 }
