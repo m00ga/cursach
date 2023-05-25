@@ -1,5 +1,18 @@
 <?php
 
+class ModelException extends Exception
+{
+    public function __construct($message, $code = 0, Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+
+    public function __toString()
+    {
+        return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+    }
+}
+
 function isInteger($val)
 {
     return ctype_digit(strval($val));
@@ -13,6 +26,7 @@ class Model
     protected array $data;
     protected array|null $constrains;
     protected string|null $orderby;
+    protected string $readby;
 
     function __construct(bool $makeConn = true)
     {
@@ -23,6 +37,7 @@ class Model
         $this->constrains = null;
         $this->data = array();
         $this->orderby = null;
+        $this->readby = 'id';
         $this->table = '';
     }
 
@@ -247,7 +262,7 @@ class Model
         }
         $values = "";
         $binds = "";
-        foreach($this->schema as $k){
+        foreach($this->schema as $k=>$v){
             $values .= $k.",";
             $binds .= ":".$k.",";
         }
@@ -257,20 +272,26 @@ class Model
 
         $query = $this->conn->prepare($sql);
         foreach($inter as $k=>$v){
-            $query->bindParam($k, $v);
+            $query->bindValue($k, $v);
         }
-        $query->execute();
+        try {
+            $query->execute();
+        } catch (PDOException $e){
+            if($e->getCode() == 23000){
+                throw new ModelException("Duplicate entry", 409);
+            }
+        }
         return true;
     }
 
-    function read(int $id)
+    function read($id)
     {
         if($this->constrains === null) {
             $sql = "SELECT * FROM ".$this->table;
         }else{
             $sql = $this->_resolveConstraints();
         }
-        $query = $this->conn->prepare($sql." WHERE ".$this->table.".id"." = :id");
+        $query = $this->conn->prepare($sql." WHERE ".$this->table.".$this->readby"." = :id");
         $query->execute(array('id' => $id));
         $res = $query->fetch(PDO::FETCH_ASSOC);
         if($res !== false) {

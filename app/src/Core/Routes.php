@@ -33,8 +33,27 @@ $router->add(
     )
 );
 
+$router->add(
+    new Route(
+        "/auth/login/", array(
+            'controller' => "Login",
+            'action' => 'login'
+        ), [], "POST"
+    )
+);
+
+$router->add(
+    new Route(
+        "/auth/register/", array(
+            'controller' => "Login",
+            'action' => 'register'
+        ), [], "POST"
+    )
+);
+
 makeREST($router, 'product');
 makeREST($router, 'manufactors');
 makeREST($router, 'sizes');
 makeREST($router, 'types');
-makeREST($router, 'cart');
+// makeREST($router, 'cart');
+// makeREST($router, 'users');

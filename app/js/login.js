@@ -30,20 +30,20 @@ $(function() {
             showError("Please enter password");
             return;
         }
-
-        let res = password.match(/\S+/g);
-        if (res.length > 1) {
-            showError("Password contains special chars");
-            return;
-        }
-        if(password.length < 6) {
-            showError("Password must contain at least 6 chars");
-            return;
-        }
-        if(new RegExp(/(?:\d+)/g).test(password) != true){
-            showError("Password must contain at least 1 number");
-            return;
-        }
         $('#loginError').css('display', 'none');
+
+        $.ajax({
+            url: "/auth/login/",
+            data: {
+                login: login,
+                password: password
+            },
+            method: "POST"
+        }).done(function(res) {
+            localStorage.setItem('JWTtoken', JSON.parse(res).data);
+        }).fail(function(xhr){
+            let obj = JSON.parse(xhr.responseText);
+            showError(obj.data);
+        })
     });
 });
