@@ -60,7 +60,7 @@ class Model_Cart extends Model
         return true;
     }
 
-    function read(int $id)
+    function read($id)
     {
         $cart = $this->getAll();
         if($cart === false) {

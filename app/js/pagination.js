@@ -1,4 +1,5 @@
 // import $ from "jquery";
+import * as cart from "./cart.js";
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -71,7 +72,6 @@ function getProducts() {
             }
             $("#page").text(page);
             sendItems();
-            // fetchItems();
         });
     };
 
@@ -118,34 +118,15 @@ function getProducts() {
                 div.append(img, name, size, price, button);
                 $(button).on("click", function(event) {
                     event.preventDefault();
-                    $.ajax({
-                        url: "/api/cart/" + this.parentNode.dataset.id,
-                        method: "GET",
-                    })
-                        .done(function(res) {
-                            $.ajax({
-                                url: "/api/cart/" + res.items.id,
-                                method: "PUT",
-                                data: {
-                                    amount: res.items.amount + 1,
-                                },
-                            });
-                        })
-                        .fail(() => {
-                            if(typeof div.dataset.id === 'undefined'){
-                                return;
-                            }
-                            let id = div.dataset.id;
-                            $.ajax({
-                                url: "/api/cart/" + id,
-                                method: "POST",
-                                data: {
-                                    id: id,
-                                    prod_id: id, 
-                                    amount: 1,
-                                },
-                            });
-                        });
+                    let id = this.parentNode.dataset.id;
+                    if(id === undefined){
+                        return;
+                    }
+                    cart.addToCart(id);
+                    setTimeout(function(){
+                        $(div).removeAttr('data-id');
+                        $(size).children().removeClass('selected')
+                    }, 2000);
                 });
                 this.appendChild(div);
             }

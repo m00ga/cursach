@@ -1,19 +1,31 @@
 <?php
 
-function checkAuth()
+function checkAuth($role = 1)
 {
-    return !!($_SESSION['user_id'] ?? false);
+    if(!isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])){
+        return false;
+    }else{
+        $data = JWT::decode($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+        if($data === false || $data['role'] !== $role){
+            return false;
+        }else{
+            return true;
+        }
+    }
 }
 
 class RESTify
 {
     private Model $_model;
     public int $id;
+    public $checkFunc;
+    private $_role;
 
-    function __construct(Model $model, int $id)
+    function __construct(Model $model, int $id, int $role = 1)
     {
         $this->_model = $model;
         $this->id = $id;
+        $this->_role = $role;
     }
 
     function get()
@@ -57,11 +69,17 @@ class RESTify
 
     function post(array $params)
     {
-        // if(!checkAuth()) {
-        //     http_response_code(401);
-        //     return;
-        // }
-        $ret = $this->_model->create($params);
+        if(!checkAuth($this->_role)) {
+            http_response_code(401);
+            return;
+        }
+        try {
+            $ret = $this->_model->create($params);
+        } catch (ModelException $e){
+            echo $e->getMessage();
+            http_response_code($e->getCode());
+            return;
+        }
         if($ret === true) {
             http_response_code(201);
         }else{
@@ -71,10 +89,10 @@ class RESTify
 
     function put(array $params)
     {
-        // if(!checkAuth()) {
-        //     http_response_code(401);
-        //     return;
-        // }
+        if(!checkAuth($this->_role)) {
+            http_response_code(401);
+            return;
+        }
         $ret = $this->_model->update($this->id, $params);
         if($ret === true) {
             http_response_code(201);
@@ -85,10 +103,10 @@ class RESTify
 
     function delete()
     {
-        // if(!checkAuth()) {
-        //     http_response_code(401);
-        //     return;
-        // }
+        if(!checkAuth($this->_role)) {
+            http_response_code(401);
+            return;
+        }
         $ret = $this->_model->delete($this->id);
         if($ret === true) {
             http_response_code(200);
@@ -127,7 +145,7 @@ class Controller_API extends Controller
             "model_manufactors",
             "model_sizes",
             "model_types",
-            "model_cart"
+            // "model_cart",
         ];
     }
 
@@ -159,10 +177,10 @@ class Controller_API extends Controller
         $rest->process();
     }
 
-    function cart($params)
-    {
-        $model = new Model_Cart();
-        $rest = new RESTify($model, ($params['id'] != "")? intval($params['id']):0);
-        $rest->process();
-    }
+    // function cart($params)
+    // {
+    //     $model = new Model_Cart();
+    //     $rest = new RESTify($model, ($params['id'] != "")? intval($params['id']):0, 0);
+    //     $rest->process();
+    // }
 }

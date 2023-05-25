@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="css/index.css">
 <script src="js/jquery-3.6.4.min.js"></script>
-<script src="js/pagination.js"></script>
+<script type='module' src="js/pagination.js"></script>
 <script type="module" src="js/modal.js"></script>
 <script src="js/dynSearch.js"></script>
 <script src="js/login.js"></script>
