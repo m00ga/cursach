@@ -19,6 +19,7 @@ class CreateShopTable extends AbstractMigration
         return "CREATE TABLE `shop` (
             `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
             `name` varchar(255) NOT NULL,
+            `img` VARCHAR(128) NOT NULL,
             `manufactor` int NOT NULL,
             `price` decimal(5,2) NOT NULL,
             `avaliable` tinyint NOT NULL,

@@ -27,6 +27,8 @@ class Model
     protected array|null $constrains;
     protected string|null $orderby;
     protected string $readby;
+    protected string $groupby;
+    protected array $togroup;
 
     function __construct(bool $makeConn = true)
     {
@@ -38,6 +40,8 @@ class Model
         $this->data = array();
         $this->orderby = null;
         $this->readby = 'id';
+        $this->groupby = 'id';
+        $this->togroup = [];
         $this->table = '';
     }
 
@@ -103,7 +107,13 @@ class Model
         }
     }
 
-    private function _resolveConstraints()
+    private function _buildGroupConcat($table, $key){
+        return "GROUP_CONCAT($table.$key ORDER BY $table.$key SEPARATOR ',') as $key";
+    }
+
+    // for resolving constraints defined in child model
+    // if we got a group key, make group_concat
+    private function _resolveConstraints($group = false)
     {
         $sql = "SELECT ";
         $ret_sql = "";
@@ -111,11 +121,19 @@ class Model
         foreach(array_keys($this->schema) as $key){
             if(in_array($key, array_keys($this->constrains))) {
                 $data = $this->constrains[$key];
-                $ret_sql .= $data['table'].".".$key.", ";
+                if($group && in_array($key, $this->togroup)){
+                    $ret_sql .= $this->_buildGroupConcat($data['table'], $key).", ";
+                }else{
+                    $ret_sql .= $data['table'].".".$key.", ";
+                }
                 $joins .= "INNER JOIN ".$data['table']."\n";
                 $joins .= "ON ".$this->table.".".$key." = ".$data['table'].".".$data['cond']."\n";
             }else{
-                $ret_sql .= $this->table.".".$key.", ";
+                if($group && in_array($key, $this->togroup)){
+                    $ret_sql .= $this->_buildGroupConcat($this->table, $key).", ";
+                }else{
+                    $ret_sql .= $this->table.".".$key.", ";
+                }
             }
         }
         $ret_sql = rtrim($ret_sql, ', ');
@@ -222,27 +240,48 @@ class Model
         }
     }
 
+    private function buildSelect($group = false){
+        $sql = "SELECT ";
+        foreach(array_keys($this->schema) as $k){
+            if($group && in_array($k, $this->togroup)){
+                $sql = $this->_buildGroupConcat($this->table, $k);
+            }else{
+                $sql .= "$this->table.$k, ";
+            }
+        }
+        $sql = rtrim($sql, " ,");
+        $sql .= " FROM $this->table";
+        return $sql;
+    }
+
     // Most complex thing in Model
     // filter by scheme + limit and offset
     // works with array parameters in GET request
     // validate by intersection with scheme
     function filterBy(array $params)
     {
+        $group = false;
+        if(isset($params['group'])){
+            $group = boolval($params['group']);
+        }
         $res = $this->verify($params, $inter);
         if($res === false) {
             return false;
         }
         $cond = $this->_buildCond($inter);
         if($this->constrains === null) {
-            $sql = "SELECT * FROM ".$this->table;
+            $sql = $this->buildSelect($group);
         }else{
-            $sql = $this->_resolveConstraints();
+            $sql = $this->_resolveConstraints($group);
         }
         if($cond !== "") {
             $sql .= " WHERE ".$cond;
         }
+        if($group){
+            $sql .= " GROUP BY $this->table.$this->groupby";
+        }
         if($this->orderby !== null) {
-            $sql .= " ORDER BY ".$this->orderby;
+            $sql .= " ORDER BY $this->table.$this->orderby";
         }
         $limit = $this->limit($params, $sql);
         $query = $this->conn->prepare($sql);

@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   mysql:
-    image: mysql/mysql-server:8.0.32
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     networks:
       - back
       - front

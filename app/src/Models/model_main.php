@@ -8,6 +8,7 @@ class Model_Main extends Model
         $this->schema = array(
             "id" => "int",
             "name" => "str",
+            "img" => "str",
             "manufactor" => "int",
             "price" => "float",
             "avaliable" => "bool",
@@ -21,6 +22,8 @@ class Model_Main extends Model
             "size" => ["table" => "sizes", "cond" => "id"]
         ];
         $this->orderby = 'id';
+        $this->groupby = 'name';
+        $this->togroup = ['id', 'avaliable', 'size'];
         $this->table = "shop";
     }
 }

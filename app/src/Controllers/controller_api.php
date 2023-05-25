@@ -30,13 +30,10 @@ class RESTify
 
     function get()
     {
-        $group = false;
-        if(isset($_GET['group'])) {
-            $group = boolval($_GET['group']);
-            unset($_GET['group']);
-        }
         if($this->id !== 0) {
-            $res = $this->_model->read($this->id);
+            $red = $this->_model->read($this->id);
+            $res = [];
+            $res[] = $red;
         }else if (count($_GET) > 0) {
             $res = $this->_model->filterBy($_GET);
         }else{
@@ -47,18 +44,10 @@ class RESTify
             if(count($res) == 0) {
                 http_response_code(404);
             }else{
-                $ret = array();
-                if($group == true) {
-                    foreach($res as $row){
-                        $ret[$row['name']][] = $row;
-                    }
-                }else{
-                    $ret = $res;
-                }
                 echo json_encode(
                     [
-                    'items' => $ret,
-                    'count' => count($ret)
+                    'items' => $res,
+                    'count' => count($res)
                     ]
                 );
             }

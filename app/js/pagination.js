@@ -85,24 +85,27 @@ function getProducts() {
 
                 let img = document.createElement("img");
                 img.className = "item_img";
-                img.src = "media/cart.svg";
+                console.log(prod);
+                img.src = "media/" + prod.img;
 
                 let name = document.createElement("span");
                 name.className = "item_name";
-                name.innerText = elem;
+                name.innerText = prod.name;
 
                 let size = document.createElement("div");
                 size.className = "item_size";
-                prod.forEach((product) => {
+                let avaliable = prod.avaliable.split(',');
+                let ids = prod.id.split(',');
+                prod.size.split(',').reverse().forEach((product, ind) => {
                     let size_button = document.createElement("span");
-                    size_button.innerText = product.size;
-                    if (product.avaliable == 0) {
+                    size_button.innerText = product;
+                    if (avaliable[ind] == 0) {
                         size_button.className = "disabled";
                     } else {
                         $(size_button).on("click", function() {
                             $(size).children().removeClass('selected')
                             $(this).addClass("selected");
-                            div.dataset.id = product.id;
+                            div.dataset.id = ids[ind];
                         });
                     }
                     size.appendChild(size_button);
@@ -110,7 +113,7 @@ function getProducts() {
 
                 let price = document.createElement("span");
                 price.className = "item_price";
-                price.innerText = prod[0].price;
+                price.innerText = prod.price;
 
                 let button = document.createElement("button");
                 button.className = "item_add";
