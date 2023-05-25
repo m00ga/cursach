@@ -10,10 +10,20 @@ class Controller_Login extends Controller
         ];
     }
 
-    // function verify($params) {
-    //     $token = $params['token'];
-    //     $res = 
-    // }
+    private function _validate($post)
+    {
+        preg_match("/\S+/", $post['password'], $matches);
+        if(count($matches) > 1) {
+            return "Special chars doesn't allowed";
+        }
+        if(strlen($post['password']) < 6) {
+            return "Password must be at least 6 chars";
+        }
+        if(!preg_match("/(?:\d+)/", $post['password'])) {
+            return "Password must contain at least 1 number";
+        }
+        return true;
+    }
 
     private function _sendData($data, $code)
     {
@@ -22,30 +32,27 @@ class Controller_Login extends Controller
 
     function register()
     {
-        $model = new Model_User();
-        if(!isset($_POST['login']) || !isset($_POST['password'])) {
+        if(!isset($post['login']) || !isset($post['password'])) {
             http_response_code(400);
             return;
         }
-        $ret = $model->read($_POST['login']);
-        if($ret !== false) {
-            $this->_sendData("User already exists", -1);
-            return;
-        }
-        preg_match("/\S+/", $_POST['password'], $matches);
-        if(count($matches) > 1) {
-            $this->_sendData("Special chars doesn't allowed", -1);
-            return;
-        }
-        if(strlen($_POST['password']) < 6) {
-            $this->_sendData("Password must be at least 6 chars", -1);
-            return;
-        }
-        if(!preg_match("/(?:\d+)/", $_POST['password'])) {
-            $this->_sendData("Password must contain at least 1 number", -1);
+
+        $res = $this->_validate($_POST);
+        if($res !== true){
+            http_response_code(400);
+            $this->_sendData($res, -1);
             return;
         }
 
+        $model = new Model_User();
+
+        $ret = $model->read($post['login']);
+        if($ret !== false) {
+            http_response_code(400);
+            $this->_sendData("User already exists", -1);
+            return;
+        }
+        
         $hash = password_hash($_POST['password'], PASSWORD_BCRYPT);
         $model->create(
             ['login' => $_POST['login'],
@@ -58,11 +65,19 @@ class Controller_Login extends Controller
 
     function login()
     {
-        $model = new Model_User();
         if(!isset($_POST['login']) || !isset($_POST['password'])) {
             http_response_code(400);
             return;
         }
+
+        $res = $this->_validate($_POST);
+        if($res !== true){
+            http_response_code(400);
+            $this->_sendData($res, -1);
+            return;
+        }
+
+        $model = new Model_User();
         $status = $model->read($_POST['login']);
         if($status === false) {
             http_response_code(400);
