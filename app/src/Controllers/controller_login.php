@@ -27,7 +27,21 @@ class Controller_Login extends Controller
 
     private function _sendData($data, $code)
     {
+        header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['data' => $data, 'status' => $code]);
+    }
+
+    function verify($params)
+    {
+        try{
+            JWT::verify($params['token']);
+        }catch (JWTException $e){
+            http_response_code(400);
+            $this->_sendData($e->getMessage(), -1);
+            return;
+        }
+
+        http_response_code(200);
     }
 
     function register()
@@ -38,7 +52,7 @@ class Controller_Login extends Controller
         }
 
         $res = $this->_validate($_POST);
-        if($res !== true){
+        if($res !== true) {
             http_response_code(400);
             $this->_sendData($res, -1);
             return;
@@ -71,7 +85,7 @@ class Controller_Login extends Controller
         }
 
         $res = $this->_validate($_POST);
-        if($res !== true){
+        if($res !== true) {
             http_response_code(400);
             $this->_sendData($res, -1);
             return;

@@ -5,6 +5,14 @@ function base64url_encode($data)
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
+class JWTException extends Exception
+{
+    function __construct($message, $code = 0, Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+}
+
 class JWT
 {
     static function encode($payload)
@@ -23,7 +31,7 @@ class JWT
     {
         $tokenParts = explode('.', $token);
         if(count($tokenParts) != 3) {
-            return false;
+            throw new JWTException("Wrong JWT format");
         }
         $header = base64_decode($tokenParts[0]);
         $payload = base64_decode($tokenParts[1]);
@@ -32,7 +40,7 @@ class JWT
         $payload_decoded = json_decode($payload, true);
         if(isset($payload_decoded['exp'])) {
             if ($payload_decoded['exp'] - time() < 0) {
-                return false;
+                throw new JWTException("Token expired");
             }
         }
         $sig = hash_hmac('sha256', "$tokenParts[0].$tokenParts[1]", SECRET_KEY, true);
@@ -41,14 +49,16 @@ class JWT
         if($signature === $sig_enc) {
             return true;
         }else {
-            return false;
+            throw new JWTException("Signatures doesn't match");
         }
     }
 
     static function decode($token)
     {
-        if(self::verify($token) == false){
-            return false;
+        try {
+            self::verify($token);
+        } catch(JWTException $e){
+            return false; 
         }
 
         $payload = base64_decode(explode('.', $token)[1]);

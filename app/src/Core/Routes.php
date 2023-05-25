@@ -51,6 +51,17 @@ $router->add(
     )
 );
 
+$router->add(
+    new Route(
+        "/auth/verify/{token}", array(
+            'controller' => "Login",
+            'action' => 'verify'
+        ), [
+            "token" => "/[\d\w\W]+/"
+        ], "GET"
+    )
+);
+
 makeREST($router, 'product');
 makeREST($router, 'manufactors');
 makeREST($router, 'sizes');
