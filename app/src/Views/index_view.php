@@ -39,6 +39,7 @@
 <div id="searchModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
+            <span class="modal-close">&times;</span>
             <input id="prodSearch" class="search" type="text">
         </div>
         <div id='prodBody' class="modal-body">
@@ -64,6 +65,19 @@
         <div class="modal-footer">
             <span id="loginError" style="display:none;"></span>
             <button id="loginButton">Login</button>
+        </div>
+    </div>
+</div>
+<div id='cartModal' class='modal'>
+    <div class='modal-content'>
+        <div class="modal-header">
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class='modal-body' id="cartPanel">
+        </div>
+        <div class='modal-footer'>
+                <button id="orderButton">Оформити</button>
+                <button id="deleteButton">Видалити все</button>
         </div>
     </div>
 </div>

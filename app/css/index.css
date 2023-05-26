@@ -77,9 +77,14 @@ button {
   margin: 0;
 }
 
-button:hover {
+button:not(:disabled):hover {
   background-color: #5168d2;
   color: white;
+}
+button:disabled {
+  color: black;
+  cursor: default;
+  background-color: #d3d3d3;
 }
 
 .item_add {
@@ -275,4 +280,45 @@ button:hover {
   width: 150px;
   max-width: 100%;
   padding: 10px 0;
+}
+
+#cartModal .modal-footer {
+  margin-top: 10px;
+  align-self: center;
+  justify-self: center;
+}
+
+.modal-footer button {
+  margin: 0 10px;
+  width: 150px;
+  max-width: 100%;
+  padding: 10px 0;
+}
+
+#cartPanel {
+  max-height: 330px;
+  overflow: scroll;
+}
+
+.cartRow {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min-content;
+  align-items: center;
+  border: 1px #e7e7ea solid;
+  border-radius: 8px;
+  padding: 3px 0;
+  margin: 5px 0;
+}
+
+.cartImg {
+  height: 28px;
+  width: 28px;
+}
+
+.cartAnnot span:first-child {
+  font-size: 14px;
+  color: #696969;
+  margin-left: 10px;
+  margin-right: 3px;
 }

@@ -7,11 +7,13 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
-function getProducts() {
+function getProducts(page, limit) {
     var ajaxData = {
         manufactor: [],
         type: [],
         size: [],
+        offset: (page - 1) * limit,
+        limit: limit,
         gender: getCookie("gender") == "boys" ? 1 : 2,
         group: 1,
     };
@@ -32,21 +34,12 @@ function getProducts() {
         let page = 1;
         let limit = 9;
         let count = 0;
-        let products = {};
 
         let fetchItems = async function() {
-            getProducts().done((res) => {
-                products = res.items;
+            getProducts(page, limit).done((res) => {
                 count = res.count;
-                sendItems();
+                $(".shop_list").trigger("newdata", [res.items]);
             });
-        };
-
-        let sendItems = function() {
-            let data = Object.fromEntries(
-                Object.entries(products).slice((page - 1) * limit, page * limit)
-            );
-            $(".shop_list").trigger("newdata", [data]);
         };
 
         this.append("<a href='#' class='pagination' id='back'><</a>");
@@ -65,13 +58,13 @@ function getProducts() {
         $(".pagination").on("click", function() {
             if (this.id == "back" && page > 1) {
                 page--;
-            } else if (this.id == "forward" && count >= limit * page) {
+            } else if (this.id == "forward" && count >= limit) {
                 page++;
-            }else{
+            } else {
                 return;
             }
             $("#page").text(page);
-            sendItems();
+            fetchItems();
         });
     };
 
@@ -85,7 +78,6 @@ function getProducts() {
 
                 let img = document.createElement("img");
                 img.className = "item_img";
-                console.log(prod);
                 img.src = "media/" + prod.img;
 
                 let name = document.createElement("span");
@@ -94,22 +86,29 @@ function getProducts() {
 
                 let size = document.createElement("div");
                 size.className = "item_size";
-                let avaliable = prod.avaliable.split(',');
-                let ids = prod.id.split(',');
-                prod.size.split(',').reverse().forEach((product, ind) => {
-                    let size_button = document.createElement("span");
-                    size_button.innerText = product;
-                    if (avaliable[ind] == 0) {
-                        size_button.className = "disabled";
-                    } else {
-                        $(size_button).on("click", function() {
-                            $(size).children().removeClass('selected')
-                            $(this).addClass("selected");
-                            div.dataset.id = ids[ind];
-                        });
-                    }
-                    size.appendChild(size_button);
-                });
+                let avaliable = prod.avaliable.split(",");
+                let ids = prod.id.split(",");
+                let prodData = {};
+                let id = 0;
+                prodData["name"] = prod.name;
+                prod.size
+                    .split(",")
+                    .reverse()
+                    .forEach((product, ind) => {
+                        let size_button = document.createElement("span");
+                        size_button.innerText = product;
+                        if (avaliable[ind] == 0) {
+                            size_button.className = "disabled";
+                        } else {
+                            $(size_button).on("click", function() {
+                                $(size).children().removeClass("selected");
+                                $(this).addClass("selected");
+                                prodData["size"] = product;
+                                id = ids[ind];
+                            });
+                        }
+                        size.appendChild(size_button);
+                    });
 
                 let price = document.createElement("span");
                 price.className = "item_price";
@@ -121,14 +120,12 @@ function getProducts() {
                 div.append(img, name, size, price, button);
                 $(button).on("click", function(event) {
                     event.preventDefault();
-                    let id = this.parentNode.dataset.id;
-                    if(id === undefined){
+                    if (prodData.size === undefined) {
                         return;
                     }
-                    cart.addToCart(id);
-                    setTimeout(function(){
-                        $(div).removeAttr('data-id');
-                        $(size).children().removeClass('selected')
+                    cart.addToCart(id, prodData);
+                    setTimeout(function() {
+                        $(size).children().removeClass("selected");
                     }, 2000);
                 });
                 this.appendChild(div);

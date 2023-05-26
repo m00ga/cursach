@@ -17,7 +17,7 @@
         <div id="icons">
             <a><img id='search' src="media/search.svg"></a>
             <a><img id='login' src="media/user.svg"></a>
-            <a><img src="media/cart.svg"></a>
+            <a><img id='cart' src="media/cart.svg"></a>
         </div>
     </header>
 
