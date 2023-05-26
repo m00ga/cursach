@@ -100,23 +100,24 @@ class Router
     function __construct()
     {
         $this->_nroutes = array();
+        $this->_nroutes['noone'] = array();
     }
 
     function add(Route $route)
     {
         $data = array_slice($route->path, 1, count($route->path) - 2);
         $point = &$this->_nroutes;
-        foreach($data as $sub){
-            if(!isset($point[$sub])) {
-                $point[$sub] = array();
+        if(count($data) < 2) {
+            $point = &$point['noone'];
+        } else {
+            foreach($data as $sub){
+                if(!isset($point[$sub])) {
+                    $point[$sub] = array();
+                }
+                $point = &$point[$sub];
             }
-            $point = &$point[$sub];
         }
-        if(count($data) === 0) {
-            $point['noone'][] = $route;
-        }else{
-            array_push($point, $route);
-        }
+        array_push($point, $route);
     }
 
     function start()
@@ -125,25 +126,24 @@ class Router
         $data = explode("/", $uri);
         $data = array_slice($data, 1, count($data) - 2);
         $point = &$this->_nroutes;
-        if(count($data) !== 0 && count($data) < 2){
-            Router::Error404();
-            return;
-        }
-        foreach($data as $sub){
-            if(!isset($point[$sub])) {
-                Router::Error404();
-                return;
+        if(count($data) < 2) {
+            $point = $point['noone'];
+        }else {
+            foreach($data as $sub){
+                if(!isset($point[$sub])) {
+                    Router::Error404();
+                    return;
+                }
+                $point = &$point[$sub];
             }
-            $point = &$point[$sub];
-        }
-        if(count($data) === 0){
-            $point = &$point['noone'];
         }
         foreach($point as $route){
             if($route->verify($uri) === true) {
                 $route->run();
+                return;
             }
         }
+        Router::Error404();
     }
 
     static function Error404()
