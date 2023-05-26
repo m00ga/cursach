@@ -40,7 +40,8 @@ $(function() {
             },
             method: "POST"
         }).done(function(res) {
-            localStorage.setItem('JWTtoken', JSON.parse(res).data);
+            localStorage.setItem('JWTtoken', res.data);
+            $('#loginModal').trigger("modalClose", []);
         }).fail(function(xhr){
             let obj = JSON.parse(xhr.responseText);
             showError(obj.data);
