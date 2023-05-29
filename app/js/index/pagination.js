@@ -7,7 +7,7 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
-function getProducts(page, limit) {
+function getProducts(page, limit, search = null) {
     var ajaxData = {
         manufactor: [],
         type: [],
@@ -17,6 +17,9 @@ function getProducts(page, limit) {
         gender: getCookie("gender") == "boys" ? 1 : 2,
         group: 1,
     };
+    if (search !== null) {
+        ajaxData["name"] = search;
+    }
     $(".shop_params div ul li input").each(function() {
         if (this.checked === true) {
             ajaxData[this.className].push(this.value);
@@ -35,12 +38,22 @@ function getProducts(page, limit) {
         let limit = 9;
         let count = 0;
 
-        let fetchItems = async function() {
-            getProducts(page, limit).done((res) => {
+        let fetchItems = async function(search = null) {
+            getProducts(page, limit, search).done((res) => {
                 count = res.count;
                 $(".shop_list").trigger("newdata", [res.items]);
             });
         };
+
+        $(this).on("newdata", function(_, data) {
+            page = 1;
+            $("#page").text(page);
+            if (data !== undefined) {
+                fetchItems(data);
+            } else {
+                fetchItems();
+            }
+        });
 
         this.append("<a href='#' class='pagination' id='back'><</a>");
         this.append("<span id='page' class='pagination'>" + page + "</span>");
@@ -112,7 +125,7 @@ function getProducts(page, limit) {
 
                 let price = document.createElement("span");
                 price.className = "item_price";
-                price.innerText = prod.price;
+                price.innerText = "Ціна: " + prod.price + " грн.";
 
                 let button = document.createElement("button");
                 button.className = "item_add";

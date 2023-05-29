@@ -1,9 +1,8 @@
-<link rel="stylesheet" href="css/index.css">
-<script src="js/jquery-3.6.4.min.js"></script>
-<script type='module' src="js/pagination.js"></script>
-<script type="module" src="js/modal.js"></script>
-<script src="js/dynSearch.js"></script>
-<script src="js/login.js"></script>
+<link rel="stylesheet" href="/css/index.css">
+<script type='module' src="/js/index/pagination.js"></script>
+<script type="module" src="/js/index/modal.js"></script>
+<script src="/js/index/dynSearch.js"></script>
+<script type="module" src="/js/index/login.js"></script>
 <div class="shop_menu">
     <div class='shop_params'>
         <?php
@@ -32,19 +31,12 @@
     </div>
     <button id='filter'>Фільтрувати</button>
 </div>
+<div id="searchContainer">
+    <input id="prodSearch" class="search" type="text">
+</div>
 <div class="shop_list">
 </div>
 <div class="pages">
-</div>
-<div id="searchModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-close">&times;</span>
-            <input id="prodSearch" class="search" type="text">
-        </div>
-        <div id='prodBody' class="modal-body">
-        </div>
-    </div>
 </div>
 <div id="loginModal" class="modal">
     <div class="modal-content">
@@ -52,15 +44,17 @@
             <span class="modal-close">&times;</span>
         </div>
         <div class="modal-body" id="loginPanel">
-            <div class="login-row" style="grid-area:login;">
+            <div class="login-row" style="">
                 <label for="loginparam">Login</label>
                 <input id="loginparam" type="text">
             </div>
-            <div class="login-row" style="grid-area:pass;">
+            <div class="login-row" style="">
                 <label for="passwordparam">Password</label>
-                <input id="passwordparam" type="password">
+                <div class='password-container'>
+                    <input id="passwordparam" type="password">
+                    <img id="passEye" src="/media/eye_open.svg">
+                </div>
             </div>
-            <a href="#" id="passEye">Eye</a>
         </div>
         <div class="modal-footer">
             <span id="loginError" style="display:none;"></span>
@@ -76,8 +70,8 @@
         <div class='modal-body' id="cartPanel">
         </div>
         <div class='modal-footer'>
-                <button id="orderButton">Оформити</button>
-                <button id="deleteButton">Видалити все</button>
+            <button id="orderButton">Оформити</button>
+            <button id="deleteButton">Видалити все</button>
         </div>
     </div>
 </div>

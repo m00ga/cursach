@@ -21,7 +21,7 @@ function isInteger($val)
 class Model
 {
     protected PDO $conn;
-    protected array $schema;
+    public array $schema;
     protected string $table;
     protected array $data;
     protected array|null $constrains;
@@ -65,13 +65,21 @@ class Model
     protected function verify(array $data, array &$intr = null): bool|int
     {
         $keys = array_keys($data);
-        $sch_keys = array_keys($this->schema);
+        $schema = $this->schema;
+        unset($schema['id']);
+        $sch_keys = array_keys($schema);
         $inter = array_intersect($sch_keys, $keys);
         $ret = [];
         foreach($inter as $k){
             $typ = $this->schema[$k];
             if(is_array($data[$k])) {
                 foreach($data[$k] as $subk=>$subv){
+                    if($this->constrains !== null) {
+                        if(in_array($subk, array_keys($this->constrains))) {
+                            $ret[$k][$subk] = $subv;
+                            continue;
+                        }
+                    }
                     $res = $this->_validate($subv, $typ);
                     if($res === false) {
                         return false;
@@ -80,6 +88,12 @@ class Model
                     }
                 }
             }else{
+                if($this->constrains !== null) {
+                    if(in_array($k, array_keys($this->constrains))) {
+                        $ret[$k] = $data[$k];
+                        continue;
+                    }
+                }
                 $res = $this->_validate($data[$k], $typ);
                 if($res === false) {
                     return false;
@@ -107,7 +121,8 @@ class Model
         }
     }
 
-    private function _buildGroupConcat($table, $key){
+    private function _buildGroupConcat($table, $key)
+    {
         return "GROUP_CONCAT($table.$key ORDER BY $table.$key SEPARATOR ',') as $key";
     }
 
@@ -121,7 +136,7 @@ class Model
         foreach(array_keys($this->schema) as $key){
             if(in_array($key, array_keys($this->constrains))) {
                 $data = $this->constrains[$key];
-                if($group && in_array($key, $this->togroup)){
+                if($group && in_array($key, $this->togroup)) {
                     $ret_sql .= $this->_buildGroupConcat($data['table'], $key).", ";
                 }else{
                     $ret_sql .= $data['table'].".".$key.", ";
@@ -129,7 +144,7 @@ class Model
                 $joins .= "INNER JOIN ".$data['table']."\n";
                 $joins .= "ON ".$this->table.".".$key." = ".$data['table'].".".$data['cond']."\n";
             }else{
-                if($group && in_array($key, $this->togroup)){
+                if($group && in_array($key, $this->togroup)) {
                     $ret_sql .= $this->_buildGroupConcat($this->table, $key).", ";
                 }else{
                     $ret_sql .= $this->table.".".$key.", ";
@@ -208,7 +223,12 @@ class Model
                 $cond .= "( ";
                 foreach($val as $ind=>$subval){
                     if(str_contains($subval, '%')) {
-                        $cond .= $this->table."."."$key"." LIKE ".":".$key.$ind." OR ";
+                        if(in_array($key, array_keys($this->constrains))) {
+                            $table = $this->constrains[$key]['table'];
+                        }else{
+                            $table = $this->table;
+                        }
+                        $cond .= $table."."."$key"." LIKE ".":".$key.$ind." OR ";
                     }else{
                         $cond .= $this->table.".".$key." = ".":".$key.$ind." OR ";
                     }
@@ -217,7 +237,12 @@ class Model
                 $cond .= ") AND ";
             }else{
                 if(str_contains($val, "%")) {
-                    $cond .= $this->table.".".$key." LIKE ".":".$key." AND ";
+                    if(in_array($key, array_keys($this->constrains))) {
+                        $table = $this->constrains[$key]['table'];
+                    }else{
+                        $table = $this->table;
+                    }
+                    $cond .= $table.".".$key." LIKE ".":".$key." AND ";
                 }else{
                     $cond .= $this->table.".".$key." = ".":".$key." AND ";
                 }
@@ -240,10 +265,11 @@ class Model
         }
     }
 
-    private function buildSelect($group = false){
+    private function buildSelect($group = false)
+    {
         $sql = "SELECT ";
         foreach(array_keys($this->schema) as $k){
-            if($group && in_array($k, $this->togroup)){
+            if($group && in_array($k, $this->togroup)) {
                 $sql = $this->_buildGroupConcat($this->table, $k);
             }else{
                 $sql .= "$this->table.$k, ";
@@ -254,6 +280,39 @@ class Model
         return $sql;
     }
 
+    private function extractParams($data)
+    {
+        $params = ['orderBy', 'orderType'];
+        foreach($params as $param){
+            if(in_array($param, array_keys($data))) {
+                $this->data[$param] = $data[$param];
+            }
+        }
+    }
+
+    private function getParam($name)
+    {
+        try {
+            return $this->$name;
+        } catch (Exception $e){
+            return false;
+        }
+    }
+
+    private function _ordby(&$sql)
+    {
+        $ordBy = $this->getParam("orderBy");
+        $ordType = $this->getParam('orderType') !== false? $this->getParam("orderType"):"DESC";
+        if($ordBy === false || $ordBy == "") {
+            if($this->orderby === null) {
+                return;
+            } else {
+                $ordBy = $this->orderby;
+            }
+        }
+        $sql .= " ORDER BY $this->table.$ordBy $ordType";
+    }
+
     // Most complex thing in Model
     // filter by scheme + limit and offset
     // works with array parameters in GET request
@@ -261,9 +320,10 @@ class Model
     function filterBy(array $params)
     {
         $group = false;
-        if(isset($params['group'])){
+        if(isset($params['group'])) {
             $group = boolval($params['group']);
         }
+        $this->extractParams($params);
         $res = $this->verify($params, $inter);
         if($res === false) {
             return false;
@@ -277,12 +337,10 @@ class Model
         if($cond !== "") {
             $sql .= " WHERE ".$cond;
         }
-        if($group){
+        if($group) {
             $sql .= " GROUP BY $this->table.$this->groupby";
         }
-        if($this->orderby !== null) {
-            $sql .= " ORDER BY $this->table.$this->orderby";
-        }
+        $this->_ordby($sql);
         $limit = $this->limit($params, $sql);
         $query = $this->conn->prepare($sql);
         foreach($limit as $k=>$v){
@@ -302,6 +360,9 @@ class Model
         $values = "";
         $binds = "";
         foreach($this->schema as $k=>$v){
+            if($k == 'id'){
+                continue;
+            }
             $values .= $k.",";
             $binds .= ":".$k.",";
         }
@@ -316,7 +377,7 @@ class Model
         try {
             $query->execute();
         } catch (PDOException $e){
-            if($e->getCode() == 23000){
+            if($e->getCode() == 23000) {
                 throw new ModelException("Duplicate entry", 409);
             }
         }
@@ -353,9 +414,9 @@ class Model
         $values = rtrim($values, ',');
         $sql = "UPDATE ".$this->table." SET ".$values." WHERE id = :id";
         $query = $this->conn->prepare($sql);
-        $query->bindParam("id", $id);
+        $query->bindValue("id", $id);
         foreach($inter as $k=>$v){
-            $query->bindParam($k, $v);
+            $query->bindValue($k, $v);
         }
         $query->execute();
         if($query->rowCount() > 0) {

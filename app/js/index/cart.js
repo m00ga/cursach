@@ -28,7 +28,7 @@ function addToCart(id, data) {
     } else {
         cart[id].amount = val.amount + 1;
     }
-    $("#cartPanel").trigger("update", [cart[id]]);
+    $("#cartPanel").trigger("update", [[id, cart[id]]]);
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
@@ -71,7 +71,7 @@ function removeFromCart(id) {
 }
 
 $(function() {
-    function createCartRow(data) {
+    function createCartRow(data, id) {
         let product = data.product;
         let div = document.createElement("div");
         div.className = "cartRow";
@@ -79,6 +79,11 @@ $(function() {
         let img = document.createElement("img");
         img.className = "cartImg";
         img.src = "media/delete.svg";
+
+        $(img).on("click", function() {
+            removeFromCart(id);
+            $("#cartPanel").trigger("update", []);
+        });
 
         let name = document.createElement("span");
         name.className = "cartName";
@@ -113,13 +118,13 @@ $(function() {
             $("#cartPanel").html("");
             if (cart !== false && cartLength() > 0) {
                 for (let key in cart) {
-                    createCartRow(cart[key]);
+                    createCartRow(cart[key], key);
                 }
             } else {
                 $(".modal-footer button").prop("disabled", true);
             }
         } else {
-            createCartRow(data);
+            createCartRow(data[1], data[0]);
         }
     });
 

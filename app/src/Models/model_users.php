@@ -6,6 +6,7 @@ class Model_User extends Model
     {
         parent::__construct();
         $this->schema = array(
+            'id' => 'int',
             'login' => 'str',
             'pass_hash' => 'str',
             'role' => 'int'

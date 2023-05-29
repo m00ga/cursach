@@ -11,7 +11,7 @@ class Model_Main extends Model
             "img" => "str",
             "manufactor" => "int",
             "price" => "float",
-            "avaliable" => "bool",
+            "avaliable" => "int",
             "gender" => "int",
             "type" => "int",
             "size" => "int"
@@ -19,7 +19,8 @@ class Model_Main extends Model
         $this->constrains = [
             "manufactor" => ["table" => "manufactors", "cond" => "id"],
             "type" => ["table" => "types", "cond" => "id"],
-            "size" => ["table" => "sizes", "cond" => "id"]
+            "size" => ["table" => "sizes", "cond" => "id"],
+            "gender" => ["table" => "genders", "cond" => "id"]
         ];
         $this->orderby = 'id';
         $this->groupby = 'name';

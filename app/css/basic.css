@@ -52,7 +52,7 @@ header {
   cursor: pointer;
 }
 
-img {
+#icons img {
   margin: 0 10px;
   height: 5vh;
   width: 5vh;

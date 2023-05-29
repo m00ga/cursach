@@ -35,6 +35,38 @@ $router->add(
 
 $router->add(
     new Route(
+        "/jqGrid/{grid}", array(
+        'controller' => 'Main',
+        'action' => 'jqGrid'
+        ), [
+            'grid' => '/^(?:\w+)/'
+        ]
+    )
+);
+
+$router->add(
+    new Route(
+        "/jqGrid/edit/{grid}", array(
+        'controller' => 'Main',
+        'action' => 'jqGridEdit'
+        ), [
+            'grid' => '/^(?:\w+)/'
+        ], "POST"
+    )
+);
+
+$router->add(
+    new Route(
+        "/admin/", array(
+        'controller' => "Main",
+        'action' => "admin"
+        ), [], 'GET' 
+    )
+);
+
+
+$router->add(
+    new Route(
         "/auth/login/", array(
             'controller' => "Login",
             'action' => 'login'
