@@ -1,8 +1,10 @@
 <link rel="stylesheet" href="/css/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/themes/redmond/jquery-ui.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
+<!-- <script src="/js/admin/jquery-ui.min.js"></script> -->
+<!-- <script src="/js/admin/jquery.jqGrid.min.js"></script> -->
 <script src="/js/admin/jqgrid.js"></script>
 <div id="tableSelector" class="gridSelector">
     <button value="product">Product</button>
