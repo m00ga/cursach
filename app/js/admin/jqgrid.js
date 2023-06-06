@@ -112,7 +112,10 @@ $(function() {
 
     $("#gridContainer").trigger("newdata", []);
     $("#gridContainer").on("newdata", function() {
-        $(this).html("").append("<table id='grid'></table>");
+        $(this)
+            .html("")
+            .append("<table id='grid'></table>")
+            .append("<div id='gridPager'></div>");
         $("#grid")
             .jqGrid({
                 url: "/jqGrid/" + selectedGrid,
@@ -124,10 +127,11 @@ $(function() {
                 gridview: true,
                 autowidth: true,
                 shrinkToFit: true,
-                pager: true,
+                pager: "#gridPager",
                 height: "65vh",
                 editurl: "/jqGrid/edit/" + selectedGrid,
             })
             .jqGrid("filterToolbar");
+        $("#gridPager").height("5vh");
     });
 });

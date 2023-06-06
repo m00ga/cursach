@@ -46,7 +46,7 @@ class Controller_Login extends Controller
 
     function register()
     {
-        if(!isset($post['login']) || !isset($post['password'])) {
+        if(!isset($_POST['login']) || !isset($_POST['password'])) {
             http_response_code(400);
             return;
         }
@@ -60,7 +60,7 @@ class Controller_Login extends Controller
 
         $model = new Model_User();
 
-        $ret = $model->read($post['login']);
+        $ret = $model->read($_POST['login']);
         if($ret !== false) {
             http_response_code(400);
             $this->_sendData("User already exists", -1);
@@ -74,7 +74,9 @@ class Controller_Login extends Controller
             'role' => 0
             ]
         );
+        $token = JWT::encode(['login' => $_POST['login'], 'role' => 0, 'exp' => time() + 3600]);
         http_response_code(200);
+        $this->_sendData($token, 1);
     }
 
     function login()

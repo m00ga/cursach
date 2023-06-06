@@ -133,25 +133,40 @@ class Controller_Main extends Controller
         "Розмір"
         );
         $args['productCount'] = (new Model_Main())->count();
-        $this->view->generate("index_view", "basic_view.php", $args);
+        if(isset($_GET['raw']) && $_GET['raw'] == 1) {
+            $this->view->generate("index_view", null, $args);
+        }else{
+            $this->view->generate("index_view", "basic_view.php", $args);
+        }
+    }
+
+    function checkAuth($role = 1)
+    {
+        if(!isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            return false;
+        }else{
+            $data = JWT::decode($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+            if($data === false) {
+                return false;
+            }
+            // include ROOT_DIR."/Models/model_users.php";
+            $model = new Model_User();
+            if($model->read($data['login']) === false) {
+                return false;
+            }
+            if($model->role != $role) {
+                return false;
+            }
+            return true;
+        }
     }
 
     function admin($params)
     {
-        // if(!isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])){
-        //     http_response_code(401);
-        //     return;
-        // }
-        // $data = JWT::decode($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
-        // if($data === false) {
-        //     http_response_code(401);
-        //     return;
-        // }
-        // if($data['role'] !== 1) {
-        //     http_response_code(401);
-        //     return;
-        // }
-
-        $this->view->generate("admin_view");
+        if($this->checkAuth(1) !== true) {
+            http_response_code(401);
+        } else {
+            $this->view->generate("admin_view");
+        }
     }
 }

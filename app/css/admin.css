@@ -3,14 +3,14 @@
 #main {
   position: relative;
   display: grid;
-  left: 0;
+  /* left: 0; */
   grid-auto-flow: row;
   transition: right 2s;
 }
 
-#main.disabled {
-  left: -100vw;
-}
+/* #main.disabled { */
+/*   left: -100vw; */
+/* } */
 
 .gridSelector {
   display: grid;

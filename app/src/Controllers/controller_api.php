@@ -2,15 +2,22 @@
 
 function checkAuth($role = 1)
 {
-    if(!isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])){
+    if(!isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
         return false;
     }else{
         $data = JWT::decode($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
-        if($data === false || $data['role'] !== $role){
+        if($data === false) {
             return false;
-        }else{
-            return true;
         }
+        include ROOT_DIR."/Models/model_users.php";
+        $model = new Model_User();
+        if($model->read($data['login']) === false) {
+            return false;
+        }
+        if($model->role != $role) {
+            return false;
+        }
+        return true;
     }
 }
 

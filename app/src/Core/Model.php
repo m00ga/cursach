@@ -123,7 +123,7 @@ class Model
 
     private function _buildGroupConcat($table, $key)
     {
-        return "GROUP_CONCAT($table.$key ORDER BY $table.$key SEPARATOR ',') as $key";
+        return "GROUP_CONCAT($table.$key SEPARATOR ',') as $key";
     }
 
     // for resolving constraints defined in child model

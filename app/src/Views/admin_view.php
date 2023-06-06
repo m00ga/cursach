@@ -14,6 +14,7 @@
 </div>
 <div id="gridContainer">
     <table id="grid"></table>
+    <div id="gridPager"></div>
 </div>
 <div class="gridSelector">
     <button id="addRow">Add</button>

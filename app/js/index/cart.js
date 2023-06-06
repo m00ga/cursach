@@ -20,15 +20,17 @@ function addToCart(id, data) {
         cart = {};
     }
     let val = cart[id];
+    let isNew = false;
     if (val === undefined) {
         cart[id] = {
             product: data,
             amount: 1,
         };
+        isNew = true;
     } else {
         cart[id].amount = val.amount + 1;
     }
-    $("#cartPanel").trigger("update", [[id, cart[id]]]);
+    $("#cartPanel").trigger("update", [[id, cart[id], isNew]]);
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
@@ -75,6 +77,7 @@ $(function() {
         let product = data.product;
         let div = document.createElement("div");
         div.className = "cartRow";
+        div.dataset.id = id;
 
         let img = document.createElement("img");
         img.className = "cartImg";
@@ -124,7 +127,11 @@ $(function() {
                 $(".modal-footer button").prop("disabled", true);
             }
         } else {
-            createCartRow(data[1], data[0]);
+            if (data[2] === true) {
+                createCartRow(data[1], data[0]);
+            } else {
+                $(`.cartRow[data-id='${data[0]}'] .cartAmount`).text(data[1].amount);
+            }
         }
     });
 

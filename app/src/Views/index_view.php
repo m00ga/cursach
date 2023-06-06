@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="/css/index.css">
-<script type='module' src="/js/index/pagination.js"></script>
+<script type='module' src="/js/index/pagination.js" defer></script>
 <script type="module" src="/js/index/modal.js"></script>
 <script src="/js/index/dynSearch.js"></script>
 <script type="module" src="/js/index/login.js"></script>
@@ -58,7 +58,8 @@
         </div>
         <div class="modal-footer">
             <span id="loginError" style="display:none;"></span>
-            <button id="loginButton">Login</button>
+            <button class="loginButton" value='login'>Login</button>
+            <button class="loginButton" value='register'>Register</button>
         </div>
     </div>
 </div>

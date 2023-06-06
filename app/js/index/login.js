@@ -25,37 +25,27 @@ $(function() {
     };
 
     let mainPage = true;
-    let htmlContent = "";
-    let handledEnd = false;
 
     let reBind = () => {
         $("#login").on("click", function() {
-            $("#main").addClass("disabled");
-            $("#main").on("transitionstart", function(event) {
-                if(event.originalEvent.propertyName != "right" || event.originalEvent.propertyName != "left"){
-                    return;
-                }
-                let url;
-                let token;
-                if (mainPage) {
-                    url = "/admin/";
-                    token = localStorage.getItem("JWTtoken");
-                } else {
-                    url = "/";
-                }
-                $.ajax({
-                    url: url,
-                    method: "GET",
-                    headers: { Authorization: token },
-                }).done(function(res) {
-                    htmlContent = res;
-                });
-            });
-            $("#main").on("transitionend", function(event) {
-                if(event.originalEvent.propertyName != "right" || event.originalEvent.propertyName != "left"){
-                    return;
-                }
-                $(this).removeClass('disabled');
+            let url;
+            let token;
+            if (mainPage) {
+                url = "/admin/";
+                token = localStorage.getItem("JWTtoken");
+                mainPage = false;
+            } else {
+                url = "/?raw=1";
+                mainPage = true;
+                location.href = "/";
+                return;
+            }
+            $.ajax({
+                url: url,
+                method: "GET",
+                headers: { Authorization: token },
+            }).done(function(res) {
+                $("#main").html(res);
             });
         });
     };
@@ -86,7 +76,7 @@ $(function() {
         }
     });
 
-    $("#loginButton").on("click", function() {
+    $(".loginButton").on("click", function() {
         let login = $("#loginparam").val();
         let password = $("#passwordparam").val();
 
@@ -102,7 +92,7 @@ $(function() {
         $("#loginError").css("display", "none");
 
         $.ajax({
-            url: "/auth/login/",
+            url: `/auth/${this.value}/`,
             data: {
                 login: login,
                 password: password,

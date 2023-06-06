@@ -1,5 +1,5 @@
 // import $ from "jquery";
-import * as cart from "./cart.js";
+import {addToCart} from "./cart.js";
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -104,24 +104,21 @@ function getProducts(page, limit, search = null) {
                 let prodData = {};
                 let id = 0;
                 prodData["name"] = prod.name;
-                prod.size
-                    .split(",")
-                    .reverse()
-                    .forEach((product, ind) => {
-                        let size_button = document.createElement("span");
-                        size_button.innerText = product;
-                        if (avaliable[ind] == 0) {
-                            size_button.className = "disabled";
-                        } else {
-                            $(size_button).on("click", function() {
-                                $(size).children().removeClass("selected");
-                                $(this).addClass("selected");
-                                prodData["size"] = product;
-                                id = ids[ind];
-                            });
-                        }
-                        size.appendChild(size_button);
-                    });
+                prod.size.split(",").forEach((product, ind) => {
+                    let size_button = document.createElement("span");
+                    size_button.innerText = product;
+                    if (avaliable[ind] == 0) {
+                        size_button.className = "disabled";
+                    } else {
+                        $(size_button).on("click", function() {
+                            $(size).children().removeClass("selected");
+                            $(this).addClass("selected");
+                            prodData["size"] = product;
+                            id = ids[ind];
+                        });
+                    }
+                    size.appendChild(size_button);
+                });
 
                 let price = document.createElement("span");
                 price.className = "item_price";
@@ -136,7 +133,7 @@ function getProducts(page, limit, search = null) {
                     if (prodData.size === undefined) {
                         return;
                     }
-                    cart.addToCart(id, prodData);
+                    addToCart(id, prodData);
                     setTimeout(function() {
                         $(size).children().removeClass("selected");
                     }, 2000);
@@ -146,6 +143,7 @@ function getProducts(page, limit, search = null) {
         });
     };
 })(jQuery);
+
 
 $(function() {
     $(".shop_list").shopMenu();
