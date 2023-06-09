@@ -34,6 +34,15 @@ function addToCart(id, data) {
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
+function updateCart(id, data) {
+    let cart = getCart();
+    if (cart == false) {
+        return false;
+    }
+    cart[id] = data;
+    localStorage.setItem("cart", JSON.stringify(cart));
+}
+
 function getFromCart(id) {
     let cart = getCart();
     if (cart == false) {
@@ -73,6 +82,7 @@ function removeFromCart(id) {
 }
 
 $(function() {
+    var allPrice = 0;
     function createCartRow(data, id) {
         let product = data.product;
         let div = document.createElement("div");
@@ -81,7 +91,7 @@ $(function() {
 
         let img = document.createElement("img");
         img.className = "cartImg";
-        img.src = "media/delete.svg";
+        img.src = "/media/delete.svg";
 
         $(img).on("click", function() {
             removeFromCart(id);
@@ -108,9 +118,46 @@ $(function() {
         amount.innerText = data.amount;
         let aText = document.createElement("span");
         aText.innerText = "Кількість:";
-        amountDiv.append(aText, amount);
+        let ctrlDecrease = document.createElement("span");
+        ctrlDecrease.className = "cartControl";
+        ctrlDecrease.dataset.value = "decrease";
+        ctrlDecrease.innerText = "-";
+        let ctrlIncrease = document.createElement("span");
+        ctrlIncrease.className = "cartControl";
+        ctrlIncrease.dataset.value = "increase";
+        ctrlIncrease.innerText = "+";
+        allPrice += Number.parseInt(product.price);
+        $([ctrlDecrease, ctrlIncrease]).on("click", function() {
+            if (this.disabled) {
+                return;
+            }
+            let amount = $(this).parent().children(".cartAmount");
+            let price = $(`.cartRow[data-id='${id}'] .cartPrice`);
+            let amountText = Number.parseInt(amount.text());
+            if (this.dataset.value == "decrease" && amountText > 1) {
+                amount.text(amountText - 1);
+                amountText--;
+                allPrice -= Number.parseInt(product.price);
+            } else if (this.dataset.value == "increase") {
+                amount.text(amountText + 1);
+                amountText++;
+                allPrice += Number.parseInt(product.price);
+            }
+            price.text(amountText * product.price);
+            updateCart(id, { amount: amountText, product: product });
+        });
+        amountDiv.append(aText, ctrlDecrease, amount, ctrlIncrease);
 
-        div.append(img, name, sizeDiv, amountDiv);
+        let priceDiv = document.createElement("div");
+        priceDiv.className = "cartAnnot";
+        let price = document.createElement("span");
+        price.className = "cartPrice";
+        price.innerText = Number.parseInt(product.price) * data.amount;
+        let priceAnnot = document.createElement("span");
+        priceAnnot.innerText = "Ціна: ";
+        priceDiv.append(priceAnnot, price);
+
+        div.append(img, name, sizeDiv, amountDiv, priceDiv);
         $("#cartPanel").append(div);
     }
 

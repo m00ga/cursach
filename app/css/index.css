@@ -365,5 +365,19 @@ button:disabled {
   font-size: 14px;
   color: #696969;
   margin-left: 10px;
-  margin-right: 3px;
+  margin-right: 10px;
+}
+
+.cartControl {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cartControl:disabled {
+  cursor: none;
+  color: #696969;
+}
+
+.cartAmount {
+  margin: 0 10px;
 }

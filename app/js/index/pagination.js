@@ -1,5 +1,5 @@
 // import $ from "jquery";
-import {addToCart} from "./cart.js";
+import { addToCart } from "./cart.js";
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -123,6 +123,7 @@ function getProducts(page, limit, search = null) {
                 let price = document.createElement("span");
                 price.className = "item_price";
                 price.innerText = "Ціна: " + prod.price + " грн.";
+                prodData["price"] = prod.price;
 
                 let button = document.createElement("button");
                 button.className = "item_add";
@@ -143,7 +144,6 @@ function getProducts(page, limit, search = null) {
         });
     };
 })(jQuery);
-
 
 $(function() {
     $(".shop_list").shopMenu();
